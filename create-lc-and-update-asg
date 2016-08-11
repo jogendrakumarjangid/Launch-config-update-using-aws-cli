@@ -1,0 +1,54 @@
+#!/bin/bash
+
+update_asg(){
+source asg_var
+
+for (( i = 0 ; i < ${#names[@]} ; i++ )) do
+    LC=`aws autoscaling describe-auto-scaling-groups --auto-scaling-group-name ${names[i]} --query 'AutoScalingGroups[0].LaunchConfigurationName' --output text`
+    echo "${names[i]} Launch config name is :" $LC
+
+   AMI=`aws autoscaling describe-launch-configurations --launch-configuration-names $LC --query 'LaunchConfigurations[0].ImageId' --output text`
+   instancetype=`aws autoscaling describe-launch-configurations --launch-configuration-names $LC --query 'LaunchConfigurations[0].InstanceType' --output text`
+   aws autoscaling describe-launch-configurations --launch-configuration-names $LC --query 'LaunchConfigurations[0].BlockDeviceMappings' > userdata_files/disk.json
+   securitygroup=`aws autoscaling describe-launch-configurations --launch-configuration-names $LC --query 'LaunchConfigurations[0].SecurityGroups' --output text`
+    cd userdata_files
+   monit=`aws autoscaling describe-launch-configurations --launch-configuration-names $LC --query 'LaunchConfigurations[0].InstanceMonitoring.Enabled' --output text`
+  # monit="false"
+   key_name=`aws autoscaling describe-launch-configurations --launch-configuration-names $LC --query 'LaunchConfigurations[0].KeyName' --output text` 
+    #creating new launch config 
+  # [ -e userdata-$LC.txt ] || rm disk.json;echo "Please create UserData first" && exit 
+   ASG=${names[i]}
+   LC_name=$ASG-LC-$DATE
+
+   #check instance is spot or not 
+   spot=`aws autoscaling describe-launch-configurations --launch-configuration-names $LC --query 'LaunchConfigurations[0].SpotPrice' --output text`
+   if [ $spot == "None" ];then
+       aws autoscaling create-launch-configuration --launch-configuration-name $LC_name --image-id $AMI --instance-type $instancetype --block-device-mappings file://disk.json --user-data file://userdata-$LC.txt --security-groups $securitygroup --associate-public-ip-address --instance-monitoring Enabled=$monit --key-name $key_name
+      rm disk.json;rc=$?; if [[ $rc != 0 ]]; then echo -e "$(tput setaf 1)$(tput bold)\nUnsuccessful $LC creation please check\n $(tput sgr0)"  && exit $rc; fi
+
+        echo "Updating ${names[i]} Autoscaling group ...";
+	aws autoscaling update-auto-scaling-group --auto-scaling-group-name ${names[i]} --launch-configuration-name $LC_name
+        rc=$?; if [[ $rc != 0 ]]; then echo -e "$(tput setaf 1)$(tput bold)\nUnsuccessful ${names[i]} updation please check\n $(tput sgr0)"  && exit $rc; fi
+	echo "Done."
+   else 
+      aws autoscaling create-launch-configuration --launch-configuration-name $LC_name --image-id $AMI --instance-type $instancetype --block-device-mappings file://disk.json --user-data file://userdata-$LC.txt --security-groups $securitygroup --spot-price $spot --associate-public-ip-address --instance-monitoring Enabled=$monit --key-name $key_name
+      rm disk.json;rc=$?; if [[ $rc != 0 ]]; then echo -e "$(tput setaf 1)$(tput bold)\nUnsuccessful $LC creation please check\n $(tput sgr0)"  && exit $rc; fi
+  
+        echo "Updating ${names[i]} Autoscaling group ...";
+	aws autoscaling update-auto-scaling-group --auto-scaling-group-name ${names[i]} --launch-configuration-name $LC_name
+        rc=$?; if [[ $rc != 0 ]]; then echo -e "$(tput setaf 1)$(tput bold)\nUnsuccessful ${names[i]} updation please check\n $(tput sgr0)"  && exit $rc; fi
+	echo "Done."
+ fi 
+cd ..
+  done
+  rm -rf userdata_files
+ }
+
+main(){
+
+## Create temp dir if not exists 
+[[ -d "userdata_files" ]] || mkdir "userdata_files"
+update_asg
+
+}
+main

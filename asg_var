@@ -1,0 +1,12 @@
+#!/bin/bash
+###########
+DATE=`date +%Y%m%d`
+##if you are creating multiple LC
+#DATE=`date +%Y%m%d-1` 
+##########
+#please update this array in number sequence with autoscaling name  
+names[0]=""
+names[1]=""
+names[2]=""
+names[3]=""
+

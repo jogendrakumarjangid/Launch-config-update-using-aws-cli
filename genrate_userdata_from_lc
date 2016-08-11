@@ -1,0 +1,23 @@
+#!/bin/bash
+
+get_user_data(){
+
+source asg_var
+for (( i = 0 ; i < ${#names[@]} ; i++ )) do 
+    LC=`aws autoscaling describe-auto-scaling-groups --auto-scaling-group-name ${names[i]} --query 'AutoScalingGroups[0].LaunchConfigurationName' --output text`
+    echo " ${names[i]} Launch config name is :" $LC
+
+    #GET USERDATA from launch config
+    userdata=`aws autoscaling describe-launch-configurations --launch-configuration-names $LC --query 'LaunchConfigurations[0].UserData' --output text`
+    base64 --decode <<< $userdata > userdata_files/userdata-$LC.txt
+ done
+}
+
+
+main(){
+## Create temp dir if not exists 
+[[ -d "userdata_files" ]] || mkdir "userdata_files"
+get_user_data
+
+}
+main
