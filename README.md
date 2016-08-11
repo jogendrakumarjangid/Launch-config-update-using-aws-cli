@@ -1,15 +1,14 @@
-#THIS SCRIPT MAINLY CREATED FOR UPDATE LAUNCH CONFIG USERDATA
+This script mainly used for create new launch config aur copy from current with update userdata aur any other values. 
+beacuase as of now AWS not provide Funcility to update launch config.
 
-#THATS SCRIPT RUN USING AWS_CLI SO YOU NEED TO CONFIGURED FIRST AWS_CLI CONFIG 
+first you need to configure aws cli 
 
-# ThEN YOU NEED TO UPDATE ASG GROUPS IN asg_var  
+1. Update autoscaling groups name in asg_var(in array)
+2. run genrate_userdata_from_lc (bash script)that script will genrate userdata of all launch config userdata in userdata_files directory which associate with provided autoscaling groups. then update userdata as required
+3. then run create-lc-and-update-asg (bash script) that will create new launch config with updated userdata and update newly launch config to Autoscaling group.
 
-#RUN genrate_userdata_from_lc THAT WILL GENRATE userdata of LC which associate with ASG
-#UPDATE USERDATA AS REQUIRED
-#RUN  create-lc-and-update-asg THAT WILL CREATE NEW LC WITH UPDATE USERDATA AND ADD TO ASG
-
-#IF YOU ARE CREATING MULTIPLE LC IN A DAY YOU HAVE TO CHANGE DATA VARIABLE BECAUSE NEWLY CREATE BY DATE IN NAME
-#YOU CAN UPDATE DATE VARIABLE LIKE THIS
+Note:- if you are creating multiple launch config in a day please update launch config name accordingly. because newly created launch cofngi by date in name.
+You can update DATE variable like below
 
 #DATE=`date +%Y%m%d-1`
 #DATE=`date +%Y%m%d-2`
