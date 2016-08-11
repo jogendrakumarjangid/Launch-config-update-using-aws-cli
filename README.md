@@ -8,7 +8,4 @@ first you need to configure aws cli
 3. then run create-lc-and-update-asg (bash script) that will create new launch config with updated userdata and update newly launch config to Autoscaling group.
 
 Note:- if you are creating multiple launch config in a day please update launch config name accordingly. because newly created launch cofngi by date in name.
-You can update DATE variable like below
-
-#DATE=`date +%Y%m%d-1`
-#DATE=`date +%Y%m%d-2`
+You can update DATE variable like this  #DATE=`date +%Y%m%d-1` and #DATE=`date +%Y%m%d-2`
